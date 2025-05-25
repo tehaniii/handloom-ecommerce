@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Row,
@@ -15,6 +14,7 @@ import { toast } from 'react-toastify';
 import {
   useGetProductDetailsQuery,
   useCreateReviewMutation,
+  useToggleReviewReactionMutation,
 } from '../slices/productsApiSlice';
 import Rating from '../components/Rating';
 import Loader from '../components/Loader';
@@ -32,11 +32,6 @@ const ProductScreen = () => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
 
-  const addToCartHandler = () => {
-    dispatch(addToCart({ ...product, qty }));
-    navigate('/cart');
-  };
-
   const {
     data: product,
     isLoading,
@@ -49,17 +44,34 @@ const ProductScreen = () => {
   const [createReview, { isLoading: loadingProductReview }] =
     useCreateReviewMutation();
 
+  const [toggleReaction] = useToggleReviewReactionMutation();
+
+  const addToCartHandler = () => {
+    dispatch(addToCart({ ...product, qty }));
+    navigate('/cart');
+  };
+
+  const handleReaction = async (reviewId, type) => {
+    if (!userInfo) {
+      toast.warn('Login to react to reviews');
+      return;
+    }
+    try {
+      await toggleReaction({ reviewId, type }).unwrap();
+      refetch();
+    } catch (err) {
+      toast.error('Failed to update reaction');
+    }
+  };
+
   const submitHandler = async (e) => {
     e.preventDefault();
-
     try {
-      await createReview({
-        productId,
-        rating,
-        comment,
-      }).unwrap();
+      await createReview({ productId, rating, comment }).unwrap();
       refetch();
       toast.success('Review created successfully');
+      setRating(0);
+      setComment('');
     } catch (err) {
       toast.error(err?.data?.message || err.error);
     }
@@ -119,8 +131,6 @@ const ProductScreen = () => {
                       </Col>
                     </Row>
                   </ListGroup.Item>
-
-                  {/* Qty Select */}
                   {product.countInStock > 0 && (
                     <ListGroup.Item>
                       <Row>
@@ -131,19 +141,16 @@ const ProductScreen = () => {
                             value={qty}
                             onChange={(e) => setQty(Number(e.target.value))}
                           >
-                            {[...Array(product.countInStock).keys()].map(
-                              (x) => (
-                                <option key={x + 1} value={x + 1}>
-                                  {x + 1}
-                                </option>
-                              )
-                            )}
+                            {[...Array(product.countInStock).keys()].map((x) => (
+                              <option key={x + 1} value={x + 1}>
+                                {x + 1}
+                              </option>
+                            ))}
                           </Form.Control>
                         </Col>
                       </Row>
                     </ListGroup.Item>
                   )}
-
                   <ListGroup.Item>
                     <Button
                       className='btn-block'
@@ -158,6 +165,7 @@ const ProductScreen = () => {
               </Card>
             </Col>
           </Row>
+
           <Row className='review'>
             <Col md={6}>
               <h2>Reviews</h2>
@@ -169,13 +177,42 @@ const ProductScreen = () => {
                     <Rating value={review.rating} />
                     <p>{review.createdAt.substring(0, 10)}</p>
                     <p>{review.comment}</p>
+
+                    {review.adminReply?.comment && (
+                      <div
+                        style={{
+                          marginTop: '8px',
+                          padding: '8px',
+                          backgroundColor: '#f5f5f5',
+                          borderLeft: '4px solid #0d6efd',
+                        }}
+                      >
+                        <strong>Selyn Support:</strong> {review.adminReply.comment}
+                      </div>
+                    )}
+
+                    <div className='d-flex gap-2 align-items-center mt-2'>
+                      <Button
+                        variant='outline-success'
+                        size='sm'
+                        onClick={() => handleReaction(review._id, 'like')}
+                      >
+                        👍 {review.likes?.length || 0}
+                      </Button>
+                      <Button
+                        variant='outline-danger'
+                        size='sm'
+                        onClick={() => handleReaction(review._id, 'dislike')}
+                      >
+                        👎 {review.dislikes?.length || 0}
+                      </Button>
+                    </div>
                   </ListGroup.Item>
                 ))}
+
                 <ListGroup.Item>
                   <h2>Write a Customer Review</h2>
-
                   {loadingProductReview && <Loader />}
-
                   {userInfo ? (
                     <Form onSubmit={submitHandler}>
                       <Form.Group className='my-2' controlId='rating'>
@@ -184,7 +221,7 @@ const ProductScreen = () => {
                           as='select'
                           required
                           value={rating}
-                          onChange={(e) => setRating(e.target.value)}
+                          onChange={(e) => setRating(Number(e.target.value))}
                         >
                           <option value=''>Select...</option>
                           <option value='1'>1 - Poor</option>
@@ -194,16 +231,18 @@ const ProductScreen = () => {
                           <option value='5'>5 - Excellent</option>
                         </Form.Control>
                       </Form.Group>
+
                       <Form.Group className='my-2' controlId='comment'>
                         <Form.Label>Comment</Form.Label>
                         <Form.Control
                           as='textarea'
-                          row='3'
+                          rows={3}
                           required
                           value={comment}
                           onChange={(e) => setComment(e.target.value)}
                         ></Form.Control>
                       </Form.Group>
+
                       <Button
                         disabled={loadingProductReview}
                         type='submit'

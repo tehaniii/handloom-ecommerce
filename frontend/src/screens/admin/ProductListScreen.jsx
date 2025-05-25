@@ -1,4 +1,5 @@
-import { Table, Button, Row, Col } from 'react-bootstrap';
+import { useState } from 'react';
+import { Table, Button, Row, Col, Modal } from 'react-bootstrap';
 import { FaEdit, FaPlus, FaTrash } from 'react-icons/fa';
 import { Link, useParams } from 'react-router-dom';
 import Message from '../../components/Message';
@@ -13,40 +14,41 @@ import { toast } from 'react-toastify';
 
 const ProductListScreen = () => {
   const { pageNumber } = useParams();
-  const currentPage = pageNumber || 1; // ✅ Added fallback
+  const currentPage = pageNumber || 1;
   const pageSize = 20;
 
   const { data, isLoading, error, refetch } = useGetProductsQuery({
-    pageNumber: currentPage, // ✅ Use fallback
+    pageNumber: currentPage,
     pageSize,
   });
 
-  const [deleteProduct, { isLoading: loadingDelete }] =
-    useDeleteProductMutation();
+  const [deleteProduct] = useDeleteProductMutation();
+  const [createProduct] = useCreateProductMutation();
 
-  const deleteHandler = async (id) => {
-    if (window.confirm('Are you sure')) {
-      try {
-        await deleteProduct(id);
-        refetch();
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+
+  const handleCreateProduct = async () => {
+    try {
+      await createProduct();
+      refetch();
+      toast.success('New product created successfully');
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
     }
+    setShowCreateModal(false);
   };
 
-  const [createProduct, { isLoading: loadingCreate }] =
-    useCreateProductMutation();
-
-  const createProductHandler = async () => {
-    if (window.confirm('Are you sure you want to create a new product?')) {
-      try {
-        await createProduct();
-        refetch();
-      } catch (err) {
-        toast.error(err?.data?.message || err.error);
-      }
+  const handleDeleteProduct = async () => {
+    try {
+      await deleteProduct(productToDelete);
+      refetch();
+      toast.success('Product deleted successfully');
+    } catch (err) {
+      toast.error(err?.data?.message || err.error);
     }
+    setShowDeleteModal(false);
   };
 
   return (
@@ -56,14 +58,12 @@ const ProductListScreen = () => {
           <h1>Products</h1>
         </Col>
         <Col className='text-end'>
-          <Button className='my-3' onClick={createProductHandler}>
+          <Button className='my-3' onClick={() => setShowCreateModal(true)}>
             <FaPlus /> Create Product
           </Button>
         </Col>
       </Row>
 
-      {loadingCreate && <Loader />}
-      {loadingDelete && <Loader />}
       {isLoading ? (
         <Loader />
       ) : error ? (
@@ -74,10 +74,10 @@ const ProductListScreen = () => {
             <thead>
               <tr>
                 <th>ID</th>
-                <th>NAME</th>
-                <th>PRICE</th>
-                <th>CATEGORY</th>
-                <th>BRAND</th>
+                <th>Name</th>
+                <th>Price</th>
+                <th>Category</th>
+                <th>In Stock</th>
                 <th></th>
               </tr>
             </thead>
@@ -88,7 +88,7 @@ const ProductListScreen = () => {
                   <td>{product.name}</td>
                   <td>${product.price}</td>
                   <td>{product.category}</td>
-                  <td>{product.brand}</td>
+                  <td>{product.countInStock}</td>
                   <td>
                     <Button
                       as={Link}
@@ -101,7 +101,10 @@ const ProductListScreen = () => {
                     <Button
                       variant='danger'
                       className='btn-sm'
-                      onClick={() => deleteHandler(product._id)}
+                      onClick={() => {
+                        setProductToDelete(product._id);
+                        setShowDeleteModal(true);
+                      }}
                     >
                       <FaTrash style={{ color: 'white' }} />
                     </Button>
@@ -110,13 +113,47 @@ const ProductListScreen = () => {
               ))}
             </tbody>
           </Table>
-          <Paginate
-            pages={data.pages}
-            page={data.page}
-            isAdmin={true}
-          />
+          <Paginate pages={data.pages} page={data.page} isAdmin={true} />
         </>
       )}
+
+      {/* Create Product Modal */}
+      <Modal show={showCreateModal} onHide={() => setShowCreateModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Product Creation</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          A new draft product will be created and added to your list. You can edit
+          its details afterward. Do you want to continue?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant='secondary' onClick={() => setShowCreateModal(false)}>
+            Cancel
+          </Button>
+          <Button variant='primary' onClick={handleCreateProduct}>
+            Create Product
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Delete Product Modal */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Product Deletion</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          This action will permanently remove the product from your store.
+          Are you sure you want to proceed?
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant='secondary' onClick={() => setShowDeleteModal(false)}>
+            Cancel
+          </Button>
+          <Button variant='danger' onClick={handleDeleteProduct}>
+            Delete Product
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

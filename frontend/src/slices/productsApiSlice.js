@@ -6,7 +6,7 @@ export const productsApiSlice = apiSlice.injectEndpoints({
     getProducts: builder.query({
       query: ({ keyword, pageNumber, pageSize, category }) => ({
         url: PRODUCTS_URL,
-        params: { keyword, pageNumber, pageSize, category }, // ✅ include all optional params
+        params: { keyword, pageNumber, pageSize, category },
       }),
       keepUnusedDataFor: 5,
       providesTags: ['Products'],
@@ -20,7 +20,7 @@ export const productsApiSlice = apiSlice.injectEndpoints({
     }),
 
     getCategories: builder.query({
-      query: () => `${PRODUCTS_URL}/categories`, // ✅ new endpoint for categories
+      query: () => `${PRODUCTS_URL}/categories`,
       keepUnusedDataFor: 5,
     }),
 
@@ -66,6 +66,14 @@ export const productsApiSlice = apiSlice.injectEndpoints({
       invalidatesTags: ['Product'],
     }),
 
+    toggleReviewReaction: builder.mutation({
+      query: ({ reviewId, type }) => ({
+        url: `/api/products/reviews/${reviewId}/${type}`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['Product'],
+    }),
+
     getTopProducts: builder.query({
       query: () => `${PRODUCTS_URL}/top`,
       keepUnusedDataFor: 5,
@@ -76,11 +84,12 @@ export const productsApiSlice = apiSlice.injectEndpoints({
 export const {
   useGetProductsQuery,
   useGetProductDetailsQuery,
-  useGetCategoriesQuery,       // ✅ exported hook for category dropdown
+  useGetCategoriesQuery,
   useCreateProductMutation,
   useUpdateProductMutation,
   useUploadProductImageMutation,
   useDeleteProductMutation,
   useCreateReviewMutation,
+  useToggleReviewReactionMutation, 
   useGetTopProductsQuery,
 } = productsApiSlice;

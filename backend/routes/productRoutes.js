@@ -9,25 +9,28 @@ import {
   deleteProduct,
   createProductReview,
   getTopProducts,
-  getCategories, // ✅ Import for category list
+  getCategories,
+  toggleReviewReaction,
+  replyToReview,
+  deleteReview, 
 } from '../controllers/productController.js';
 
 import { protect, admin } from '../middleware/authMiddleware.js';
 import checkObjectId from '../middleware/checkObjectId.js';
 
-// ✅ This route must come BEFORE any dynamic /:id route
 router.get('/categories', getCategories);
-
-// ✅ Top-rated products
 router.get('/top', getTopProducts);
 
-// ✅ Get all products or create a new product
 router.route('/').get(getProducts).post(protect, admin, createProduct);
 
-// ✅ Create a review for a specific product
 router.route('/:id/reviews').post(protect, checkObjectId, createProductReview);
 
-// ✅ Get / Update / Delete a specific product by ID
+router.patch('/reviews/:reviewId/:type', protect, toggleReviewReaction);
+
+router.post('/reviews/:reviewId/reply', protect, admin, replyToReview);
+
+router.delete('/reviews/:reviewId', protect, admin, deleteReview);
+
 router
   .route('/:id')
   .get(checkObjectId, getProductById)

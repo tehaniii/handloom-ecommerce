@@ -38,6 +38,7 @@ import UserListScreen from './screens/admin/UserListScreen';
 import UserEditScreen from './screens/admin/UserEditScreen';
 import StripeSuccessScreen from './screens/StripeSuccessScreen';
 import AboutScreen from './screens/AboutScreen';
+import ReviewModerationScreen from './screens/admin/ReviewModerationScreen';
 
 // Routes
 import PrivateRoute from './components/PrivateRoute';
@@ -77,6 +78,8 @@ const router = createBrowserRouter(
         <Route path='/admin/userlist' element={<UserListScreen />} />
         <Route path='/admin/product/:id/edit' element={<ProductEditScreen />} />
         <Route path='/admin/user/:id/edit' element={<UserEditScreen />} />
+        <Route path='/admin/reviews' element={<ReviewModerationScreen />} />
+
       </Route>
     </Route>
   )

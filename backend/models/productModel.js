@@ -10,6 +10,22 @@ const reviewSchema = mongoose.Schema(
       required: true,
       ref: 'User',
     },
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    dislikes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+      },
+    ],
+    adminReply: {
+      comment: { type: String },
+      repliedAt: { type: Date },
+    },
   },
   {
     timestamps: true,

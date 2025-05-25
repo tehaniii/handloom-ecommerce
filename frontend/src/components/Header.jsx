@@ -6,7 +6,7 @@ import { useLogoutMutation } from '../slices/usersApiSlice';
 import { logout } from '../slices/authSlice';
 import SearchBox from './SearchBox';
 import logo from '../assets/logo.png';
-import logoAdmin from '../assets/logo-admin.png'; 
+import logoAdmin from '../assets/logo-admin.png';
 import { resetCart } from '../slices/cartSlice';
 
 const Header = () => {
@@ -35,20 +35,22 @@ const Header = () => {
 
   const navbarProps = {
     bg: isAdmin ? 'black' : 'light',
-    variant: 'dark', 
+    variant: 'dark',
     expand: 'lg',
     collapseOnSelect: true,
   };
- const signInButtonStyle = {
+
+  const signInButtonStyle = {
     backgroundColor: '#f76c0f',
-    color: '#fff',            
+    color: '#fff',
     padding: '0.375rem 0.75rem',
-    borderRadius: '20px',      
-    textDecoration: 'none',  
-    display: 'inline-flex',    
-    alignItems: 'center',      
-    marginLeft: '0.5rem',      
+    borderRadius: '20px',
+    textDecoration: 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    marginLeft: '0.5rem',
   };
+
   return (
     <header>
       <Navbar {...navbarProps}>
@@ -63,10 +65,9 @@ const Header = () => {
               alt='Selyn'
               style={{
                 height: isAdmin ? '50px' : '90px',
-                 width: isAdmin ? 'auto' : '170px', 
+                width: isAdmin ? 'auto' : '170px',
                 marginRight: '40px',
-                  marginLeft: isAdmin ? undefined : '-10px',
-                
+                marginLeft: isAdmin ? undefined : '-10px',
               }}
             />
           </Navbar.Brand>
@@ -74,38 +75,31 @@ const Header = () => {
           <Navbar.Toggle aria-controls='basic-navbar-nav' />
           <Navbar.Collapse id='basic-navbar-nav'>
             <Nav className='ms-auto align-items-center'>
-
               {isAdmin && (
                 <Button
                   size='sm'
                   className='me-3'
-                  variant='link' 
+                  variant='link'
                   as={Link}
                   to='/admin/dashboard'
-                  style={{
-                    color: '#fff', 
-                    textDecoration: 'none', 
-                  }}
-                  
+                  style={{ color: '#fff', textDecoration: 'none' }}
                 >
                   Home
                 </Button>
               )}
 
-              
               {!isAdmin && (
-               <>
+                <>
                   <SearchBox />
                   <Nav.Link
                     as={Link}
                     to='/cart'
-                    style={{ color: '#f76c0f' }} 
+                    style={{ color: '#f76c0f' }}
                   >
-                    <FaShoppingCart className='mb-1' /> 
+                    <FaShoppingCart className='mb-1' />
                     Cart
                     {cartItems.length > 0 && (
                       <Badge pill bg='success' text='white' className='ms-1'>
-                        
                         {cartItems.reduce((a, c) => a + c.qty, 0)}
                       </Badge>
                     )}
@@ -113,16 +107,15 @@ const Header = () => {
                 </>
               )}
 
-            
               {userInfo ? (
-               <NavDropdown
-  title={
-    <span style={{ color: isAdmin ? '#fff' : '#f76c0f' }}>
-      {userInfo.name}
-    </span>
-  }
-  id='username'
->
+                <NavDropdown
+                  title={
+                    <span style={{ color: isAdmin ? '#fff' : '#f76c0f' }}>
+                      {userInfo.name}
+                    </span>
+                  }
+                  id='username'
+                >
                   <NavDropdown.Item as={Link} to='/profile'>
                     Profile
                   </NavDropdown.Item>
@@ -131,10 +124,9 @@ const Header = () => {
                   </NavDropdown.Item>
                 </NavDropdown>
               ) : (
-                // Sign In link for logged-out users
                 <Nav.Link as={Link} to='/login' style={signInButtonStyle}>
-               <FaUser className='mb-1 me-1' /> Sign In
-               </Nav.Link>
+                  <FaUser className='mb-1 me-1' /> Sign In
+                </Nav.Link>
               )}
 
               {isAdmin && (
@@ -150,6 +142,9 @@ const Header = () => {
                   </NavDropdown.Item>
                   <NavDropdown.Item as={Link} to='/admin/userlist'>
                     Users
+                  </NavDropdown.Item>
+                  <NavDropdown.Item as={Link} to='/admin/reviews'>
+                    Review Moderation
                   </NavDropdown.Item>
                 </NavDropdown>
               )}
